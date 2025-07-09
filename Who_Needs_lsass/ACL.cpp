@@ -131,7 +131,7 @@ BOOL ChangeDesktopDACL(HWINSTA Dekstop, const char* DesktopName) {
         BOOL result = SetEntriesInAclW(NUM_ACES, WorkstationEA, oldACL, &NewpACL);
 
         if (result == ERROR_SUCCESS) {
-            printf("\n[+] Changed ACL %s", DesktopName);
+            //printf("\n[+] Changed ACL %s", DesktopName);
 
         }
         else {
@@ -149,7 +149,7 @@ BOOL ChangeDesktopDACL(HWINSTA Dekstop, const char* DesktopName) {
         BOOL result = SetEntriesInAclW(NUM_ACES, DesktopEA, oldACL, &NewpACL);
 
         if (result == ERROR_SUCCESS) {
-            printf("\n[+] Changed ACL %s", DesktopName);
+            //printf("\n[+] Changed ACL %s", DesktopName);
 
         }
         else {
@@ -167,7 +167,7 @@ BOOL ChangeDesktopDACL(HWINSTA Dekstop, const char* DesktopName) {
     BOOL result = SetSecurityInfo(Dekstop, SE_WINDOW_OBJECT, DACL_SECURITY_INFORMATION, 0, 0, NewpACL, 0);
     if (result == ERROR_SUCCESS) {
 
-        printf("\n[+] Called SetSecurityInfo\n");
+       // printf("\n[+] Called SetSecurityInfo\n");
     }
     else {
 
