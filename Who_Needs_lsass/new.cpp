@@ -567,7 +567,7 @@ bool InitializePrivileges() {
         MyCloseHandle = (_CloseHandle)GetProcAddressByHash(hKernel32, H_API_CloseHandle);
     }
 
-    // קרא לפי מזהה ולא לפי שם גלוי
+    
     EnablePrivilege(0); // SeDebugPrivilege
     EnablePrivilege(1); // SeAssignPrimaryTokenPrivilege
     EnablePrivilege(2); // SeIncreaseQuotaPrivilege
